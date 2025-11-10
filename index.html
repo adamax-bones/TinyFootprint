@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tiny Footprint</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .input-section, .stats-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .stats {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> EcoTrack Waste Tracker</h1>
+        
+        <div class="input-section">
+            <h3>Log New Waste</h3>
+            <select id="wasteType">
+                <option value="plastic">Plastic</option>
+                <option value="paper">Paper</option>
+                <option value="food">Food Waste</option>
+                <option value="glass">Glass</option>
+                <option value="other">Other</option>
+            </select>
+            
+            <input type="number" id="amount" step="0.1" placeholder="Amount in kg">
+            
+            <button onclick="addWasteEntry()">Add Entry</button>
+            <div id="message"></div>
+        </div>
+        
+        <div class="stats-section">
+            <h3>Today's Statistics</h3>
+            <div class="stats" id="todayStats">Loading...</div>
+            <button onclick="refreshStats()">Refresh Stats</button>
+        </div>
+    </div>
+
+    <script>
+        // Load stats when page opens
+        window.addEventListener('DOMContentLoaded', refreshStats);
+        
+        async function addWasteEntry() {
+            const type = document.getElementById('wasteType').value;
+            const amount = document.getElementById('amount').value;
+            const message = document.getElementById('message');
+            
+            if (!amount || amount <= 0) {
+                message.innerHTML = 'Please enter a valid amount';
+                return;
+            }
+            
+            try {
+                const result = await window.electronAPI.addWasteEntry({
+                    type: type,
+                    amount: parseFloat(amount),
+                    category: 'general'
+                });
+                
+                if (result.success) {
+                    message.innerHTML = `Added ${amount}kg of ${type}`;
+                    document.getElementById('amount').value = '';
+                    refreshStats();
+                } else {
+                    message.innerHTML = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                message.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function refreshStats() {
+            const statsElement = document.getElementById('todayStats');
+            
+            try {
+                const result = await window.electronAPI.getTodayStats();
+                
+                if (result.success) {
+                    const comparisonText = result.comparison >= 0 ? 
+                        `${result.comparison}kg MORE than average` : 
+                        `${Math.abs(result.comparison)}kg LESS than average`;
+                    
+                    statsElement.innerHTML = `
+                        <strong>Total Waste Today:</strong> ${result.totalToday} kg<br>
+                        <strong>Comparison:</strong> ${comparisonText}<br>
+                        <strong>Entries Logged:</strong> ${result.entryCount}
+                    `;
+                } else {
+                    statsElement.innerHTML = `Error loading stats: ${result.error}`;
+                }
+            } catch (error) {
+                statsElement.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
