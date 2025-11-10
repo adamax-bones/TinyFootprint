@@ -1,0 +1,16 @@
+{
+  "name": "shut-start-ride-49at2",
+  "productName": "shut-start-ride-49at2",
+  "description": "My Electron application description",
+  "keywords": [],
+  "main": "./main.js",
+  "version": "1.0.0",
+  "author": "adama",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "37.2.5"
+  }
+}
